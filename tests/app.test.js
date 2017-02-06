@@ -5,13 +5,17 @@ const request = require("supertest");
 const {app} = require("./../app");
 const {Todo} = require("./../models/todo"); 
 
+const seedData = [{
+    text: "test task 1"
+},{
+    text: "test task 2"
+}];
 
 beforeEach((done) => {
-    //wipe database
     Todo.remove({}).then(() => {
-        console.log("Wiped database contents")
-        done();
-    });
+        return Todo.insertMany(seedData);
+        }
+    ).then(() => done());
 });
 
 //Test cases
@@ -33,8 +37,8 @@ describe("POST /todos", () => {
             }
             //check record was actually added
             Todo.find().then((todos) => {
-                expect(todos.length).toBe(1);
-                expect(todos[0].text).toBe(text);
+                expect(todos.length).toBe(seedData.length + 1);
+                expect(todos[seedData.length + 1].text).toBe(text);
                 done();
             }).catch((err) => done(err));
         });
@@ -51,9 +55,20 @@ describe("POST /todos", () => {
             }
             //check no records added
             Todo.find().then((todos) => {
-                expect(todos.length).toBe(0);
+                expect(todos.length).toBe(seedData.length);
                 done();
             }).catch((err) => done(err));
         });
+    });
+});
+
+describe("GET /todos", () => { 
+    it('should return seed data', (done) => {
+        request(app)
+        .get("/todos")
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todos.length).toBe(seedData.length);
+        }).end(done);
     });
 });
