@@ -4,9 +4,12 @@
   "description": "A todo list app built in node.js",
   "main": "index.js",
   "scripts": {
+    "start": "node app",
     "test": "mocha ./tests/*.test.js",
-    "test-watch": "nodemon --exec 'npm test'",
-    "start": "node app"
+    "test-watch": "nodemon --exec 'npm test'"
+  },
+  "engines": {
+    "node": "6.9.2"
   },
   "author": "Chester Craig",
   "license": "ISC",
