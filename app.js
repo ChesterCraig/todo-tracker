@@ -80,6 +80,24 @@ app.get('/todos/:id', (req,res) => {
 
 
 
+// ADDED - NO TESTING SUPPORT. NOT SURE IF ADHERES TO GOOD PRACTICES FOR WHAT IT SHOULD RETURN??
+app.delete('/todos/:id', (req,res) => {
+    if (!ObjectId.isValid(req.params.id)) {
+        return res.status(404).send("Object ID is invalid");
+    }
+    //Fetch todo
+    Todo.findByIdAndRemove(req.params.id).then((todo) => {      //by calling the return value todo we can use es6 to do the todo: todo, if we call it result in our return we need to say todo: result
+        if (!todo) {
+            res.status(404).send();
+        } else {
+            res.send({todo});
+        }
+    }).catch((e) => {
+         res.status(404).send();
+    });
+});
+
+
 app.listen(port,() => {
     console.log(`App started, listening on port ${port}`);
 });
