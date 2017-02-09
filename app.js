@@ -1,5 +1,6 @@
 //Main code for a node.js based todo list application.
 const fs = require("fs")
+const _ = require("lodash");
 const bodyParser = require("body-parser");
 const express = require("express");
 var app = express();
@@ -79,8 +80,6 @@ app.get('/todos/:id', (req,res) => {
 });
 
 
-
-// ADDED - NO TESTING SUPPORT. NOT SURE IF ADHERES TO GOOD PRACTICES FOR WHAT IT SHOULD RETURN??
 app.delete('/todos/:id', (req,res) => {
     if (!ObjectId.isValid(req.params.id)) {
         return res.status(404).send("Object ID is invalid");
@@ -94,6 +93,37 @@ app.delete('/todos/:id', (req,res) => {
         }
     }).catch((e) => {
          res.status(404).send();
+    });
+});
+
+//NO TESTS YET FOR PATCH
+app.patch('/todos/:id', (req,res) => {
+    var id = req.params.id;
+    var body = _.pick(req.body, ['text','completed']); //user only able to update todo's text or completed flag (gets subset of possible things user could have passed to us)
+
+    if (!ObjectId.isValid(id)) {
+        return res.status(404).send("Object ID is invalid");
+    }
+
+    if (_.isBoolean(body.completed) && body.completed) {
+        //set body.completed
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAst = null;
+    }
+
+    //update todo
+    Todo.findByIdAndUpdate(id, { $set: body},{new: true})
+    .then((todo) => {
+        if (!todo) {
+            res.status(404).send();
+        } else {
+            res.send({todo});
+        }
+
+    }).catch((e) => {
+        res.status(400).send();
     });
 });
 
