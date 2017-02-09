@@ -65,6 +65,7 @@ describe("POST /todos", () => {
     });
 });
 
+
 describe("GET /todos", () => { 
     it('should return seed data', (done) => {
         request(app)
@@ -96,6 +97,36 @@ describe("GET /todos/:id", () => {
     it('should return 404 if invalid id provided', (done) => {
         request(app)
         .get("/todos/dummyIDVeryWrong")
+        .expect(404)
+        .end(done);
+    });
+});
+
+describe("DELETE /todos/:id", () => { 
+    it('should delete a task if provided valid/existing id', (done) => {
+        request(app)
+        .delete("/todos/" + seedData[0]._id.toHexString())
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.text).toBe(seedData[0].text);
+
+            //check if record removed from database.
+            Todo.findById(seedData[0]._id.toHexString()).then((todo) => {
+                expect(todo).toNotExist(todo);
+            }).catch((err) => done(err));
+        }).end(done);
+    });
+
+    it('should return 404 if valid id provided that doesnt exist in db', (done) => {
+        request(app)
+        .delete("/todos/" + new ObjectId().toHexString())
+        .expect(404)
+        .end(done);
+    });
+
+    it('should return 404 if invalid id provided', (done) => {
+        request(app)
+        .delete("/todos/dummyIDVeryWrong")
         .expect(404)
         .end(done);
     });
