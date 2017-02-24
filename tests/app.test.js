@@ -13,7 +13,9 @@ const seedData = [{
     text: "test task 1"
 },{
     _id: new ObjectId(),
-    text: "test task 2"
+    text: "test task 2",
+    completed: true,
+    completedAt: 1234
 }];
 
 beforeEach((done) => {
@@ -128,6 +130,52 @@ describe("DELETE /todos/:id", () => {
     it('should return 404 if invalid id provided', (done) => {
         request(app)
         .delete("/todos/dummyIDVeryWrong")
+        .expect(404)
+        .end(done);
+    });
+});
+
+
+describe("PATCH /todos/:id", () => { 
+    it('should set task to completed a task if provided valid/existing id', (done) => {
+        request(app)
+        .patch("/todos/" + seedData[0]._id.toHexString())
+        .send({completed: true})
+        .expect(200)
+        .expect((res) => {
+            //returned updated object
+            expect(res.body.todo.completed).toBeTruthy();
+            expect(res.body.todo.completedAt).toBeA('number');
+
+            //check in database
+            Todo.findById(seedData[0]._id.toHexString()).then((todo) => {
+                expect(todo.completed).toBeTruthy();
+                expect(todo.completedAt).toBeA('number');
+            }).catch((err) => done(err));
+        }).end(done);
+    });
+
+    it('should set task to not completed and completedAt to null for a task if provided valid/existing id', (done) => {
+        request(app)
+        .patch("/todos/" + seedData[1]._id.toHexString())
+        .send({completed: false})
+        .expect(200)
+        .expect((res) => {
+            //returned updated object
+            expect(res.body.todo.completed).toBeFalsy();
+            expect(res.body.todo.completedAt).toNotExist();
+
+            //check in database
+            Todo.findById(seedData[1]._id.toHexString()).then((todo) => {
+                expect(todo.completed).toBeFalsy();
+                expect(todo.completedAt).toNotExist();
+            }).catch((err) => done(err));
+        }).end(done);
+    });
+
+    it('should return 404 if invalid id provided', (done) => {
+        request(app)
+        .patch("/todos/dummyIDVeryWrong")
         .expect(404)
         .end(done);
     });

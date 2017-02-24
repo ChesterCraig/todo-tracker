@@ -18,7 +18,7 @@ const port = process.env.PORT || 3000;
 //express middleware - log all requests to a log file
 app.use((req,res,next) => {
     var msg = `${new Date().toString()}: ${req.method} ${req.url}`;
-    //console.log(msg);
+    console.log(msg);
     fs.appendFile("server.log", msg + '\n', (error) => {
        if (error) {
             console.log("Failed to log activity to server.log : " + error);
@@ -43,6 +43,7 @@ app.post('/todos', (req,res) => {
     var todo = new Todo({
         text: req.body.text
     });
+    
     todo.save()
     .then((doc) => {
         res.send(doc);
@@ -60,8 +61,6 @@ app.get('/todos', (req,res) => {
         res.status(400).send(e);
     });
 });
-
-//5898245aad700f18973c605c
 
 app.get('/todos/:id', (req,res) => {
     if (!ObjectId.isValid(req.params.id)) {
@@ -96,7 +95,7 @@ app.delete('/todos/:id', (req,res) => {
     });
 });
 
-//NO TESTS YET FOR PATCH
+
 app.patch('/todos/:id', (req,res) => {
     var id = req.params.id;
     var body = _.pick(req.body, ['text','completed']); //user only able to update todo's text or completed flag (gets subset of possible things user could have passed to us)
@@ -110,7 +109,7 @@ app.patch('/todos/:id', (req,res) => {
         body.completedAt = new Date().getTime();
     } else {
         body.completed = false;
-        body.completedAst = null;
+        body.completedAt = null;
     }
 
     //update todo
@@ -128,8 +127,35 @@ app.patch('/todos/:id', (req,res) => {
 });
 
 
+//=====USERS=====
+//setup new user - generate auth token and send it in http header to our user so they can authenticate
+app.post('/users', (req,res) => {
+    var body = _.pick(req.body, ['email','password']);
+
+    //Create a new user from body json
+    var user = new User(body);
+
+    user.save().then(() => {
+        return user.generateAuthToken();
+    }).then((token) => {
+        res.header('x-auth',token).send(user);               //return custom header with jwt token
+    })
+    .catch((e) => {
+        res.status(400).send(e);
+    });
+});
+
+
+
+
 app.listen(port,() => {
     console.log(`App started, listening on port ${port}`);
 });
 
 module.exports = {app};
+
+
+/////////////
+
+//user - instance methods  eg .genenratAuthToken
+//User - model methods
